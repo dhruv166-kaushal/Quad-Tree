@@ -1,5 +1,15 @@
-# Quad-Tree
-Brought 2D checks from O(N^2) to O(Nlog(N))
-The primary issue with spatial data is the "Linear Bottleneck." In a standard list of coordinates, finding all points within a specific area requires a "Brute Force" approach, which becomes computationally expensive as your dataset grows.Here is the breakdown of the complexity issues and how the QuadTree resolves them.1. The Complexity Problem: $O(N)$In a naive implementation (like a simple array or list), checking for points within a rectangle requires you to iterate through every single point in the database. Time Complexity:  O(N)
- per query. The Issue: If you have 100,000 objects in a game and you want to check for collisions 60 times per second, you are performing 6 million checks per frame. This causes "frame drops" and massive CPU lag.2. The QuadTree Solution: $O(\log N)$The QuadTree resolves this by using Spatial Partitioning. Instead of looking at every point, the algorithm "discards" huge chunks of space that it knows do not contain the target area.Time Complexity: O(logN)
- average for both insertion and search.How it's resolved: By recursively dividing the space, the search algorithm only traverses branches of the tree that intersect with the query area. If a quadrant doesn't overlap with your search box, the algorithm ignores that entire branch (and all the points inside it) instantly.
+This project is a simple implementation of a QuadTree, a data structure that helps organize points in a 2D space in a smarter and more efficient way. Instead of checking every point one by one (which takes O(n) time), the space is recursively divided into four smaller regions, allowing operations to be performed much faster.
+
+Whenever a region gets too crowded, it splits into four equal quadrants. This keeps the data well-structured and reduces unnecessary checks during queries.
+
+From a mathematical perspective, this hierarchical division reduces the height of the structure to roughly O(log n) in average cases. As a result:
+
+Insertion: O(log n) (average case) Range Query: O(log n + k), where k is the number of points found
+
+This makes the QuadTree especially useful for large datasets where brute-force approaches become too slow.
+
+Overall, this project demonstrates how combining simple recursion with spatial partitioning can significantly improve performance in problems involving 2D data, such as games, maps, and geometric queries.
+
+// VISUALIZER LINK :
+
+VISUALIZE
