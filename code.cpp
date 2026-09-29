@@ -47,8 +47,6 @@ void subdivide(Quad *q)
 {
     int midX = (q->topLeft.x + q->botRight.x) / 2;
     int midY = (q->topLeft.y + q->botRight.y) / 2;
-
-    cout << 3 << "\n0";
     q->tl = createQuad(q->topLeft, Point{midX, midY});
     q->tr = createQuad(Point{midX, q->topLeft.y}, Point{q->botRight.x, midY});
 
@@ -58,7 +56,15 @@ void subdivide(Quad *q)
 
     q->divided = true;
 }
-
+void freeQuad(Quad *q)
+{
+    if (q == NULL) return;
+    freeQuad(q->tl);
+    freeQuad(q->tr);
+    freeQuad(q->bl);
+    freeQuad(q->br);
+    delete q;
+}
 bool insertNode(Quad *q, Node node)
 {
     if (!inBoundary(q, node.pos))
@@ -158,6 +164,61 @@ void rangeQuery(Quad *q, Point rangeTL, Point rangeBR, vector<Node> &result)
         rangeQuery(q->br, rangeTL, rangeBR, result);
     }
 }
+
+bool deleteNode(Quad *q, Point p)
+{
+    if (q == NULL || !inBoundary(q, p))
+        return false;
+
+    // 1. Check if the point exists in the current node's bucket
+    for (int i = 0; i < q->count; i++)
+    {
+        if (q->bucket[i].pos.x == p.x && q->bucket[i].pos.y == p.y)
+        {
+            // Found at this node! Remove it by shifting elements.
+            for (int j = i; j < q->count - 1; j++)
+            {
+                q->bucket[j] = q->bucket[j + 1];
+            }
+            q->count--;
+
+            // If this node is divided, pull up one point from the children to fill the gap
+            if (q->divided)
+            {
+                // Find a child that has points and pull the first available one up
+                Quad* childWithPoint = nullptr;
+                if (q->tl->count > 0 || q->tl->divided) childWithPoint = q->tl;
+                else if (q->tr->count > 0 || q->tr->divided) childWithPoint = q->tr;
+                else if (q->bl->count > 0 || q->bl->divided) childWithPoint = q->bl;
+                else if (q->br->count > 0 || q->br->divided) childWithPoint = q->br;
+
+                if (childWithPoint != nullptr)
+                {
+                    // Recursively pull or grab a node from child
+                    // For simplicity, if child has items in its bucket:
+                    if (childWithPoint->count > 0)
+                    {
+                        q->bucket[q->count++] = childWithPoint->bucket[0];
+                        // Delete that point from the child
+                        deleteNode(childWithPoint, childWithPoint->bucket[0].pos);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    // 2. If not found in current node, search and delete in children recursively
+    if (q->divided)
+    {
+        return deleteNode(q->tl, p) ||
+               deleteNode(q->tr, p) ||
+               deleteNode(q->bl, p) ||
+               deleteNode(q->br, p);
+    }
+
+    return false;
+}
 void pri(Quad *root)
 {
     if (root == NULL)
@@ -227,6 +288,7 @@ int main()
 
     // searching
     // cout << "Node a: " << searchNode(root, Point{1, 1})->data << "\n";
+    freeQuad(root);
     return 0;
 }
 
